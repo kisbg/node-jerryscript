@@ -163,8 +163,6 @@ private:
 
     v8::PromiseHook m_promise_hook;
     v8::PromiseRejectCallback m_promise_reject_calback;
-
-    static JerryIsolate* s_currentIsolate;
 };
 
 #endif /* V8JERRY_ISOLATE_HPP */

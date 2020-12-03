@@ -4,7 +4,6 @@
       '<(SHARED_INTERMEDIATE_DIR)/jerry/jerryscript.c',
       '<(SHARED_INTERMEDIATE_DIR)/jerry/jerryscript-config.h',
       '<(SHARED_INTERMEDIATE_DIR)/jerry/jerryscript.h',
-      '<(SHARED_INTERMEDIATE_DIR)/jerry/jerryscript-port-default.c',
       '<(SHARED_INTERMEDIATE_DIR)/jerry/jerryscript-port-default.h',
     ]
    },
@@ -26,7 +25,6 @@
             'jerryscript/tools/srcgenerator.py',
             '--output-dir=<(SHARED_INTERMEDIATE_DIR)/jerry/',
             '--jerry-core',
-            '--jerry-port-default',
           ],
         },
       ],
@@ -54,6 +52,7 @@
         'JERRY_DEBUGGER=0',
         'JERRY_ERROR_MESSAGES=1',
         'JERRY_V8_DUMP_BACKTRACE=1',
+        'JERRY_EXTERNAL_CONTEXT=1',
       ],
       'sources': [
         'api.cc',
@@ -91,6 +90,7 @@
         'jerryscript/jerry-ext/debugger/debugger-sha1.c',
         'jerryscript/jerry-ext/debugger/debugger-tcp.c',
         'jerryscript/jerry-ext/debugger/debugger-ws.c',
+        'jerryscript-port-default.c',
       ],
       'direct_dependent_settings': {
         'include_dirs': [

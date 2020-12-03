@@ -13,9 +13,27 @@
 #include "v8jerry_templates.hpp"
 #include "v8jerry_utils.hpp"
 
-JerryIsolate* JerryIsolate::s_currentIsolate = nullptr;
+#define DEBUG_PRINT 1
+
+static void *
+context_alloc_fn (size_t size, void *cb_data)
+{
+  (void) cb_data;
+  return malloc (size);
+}
+
+__thread jerry_context_t *current_context_p;
+
+jerry_context_t *
+jerry_port_get_current_context (void)
+{
+  return current_context_p;
+} /* jerry_port_get_current_context */
+
+__thread JerryIsolate* s_currentIsolate;
 
 JerryIsolate::JerryIsolate() {
+  current_context_p = jerry_create_context (30000 * 1024, context_alloc_fn, NULL);
 }
 
 JerryIsolate::JerryIsolate(const v8::Isolate::CreateParams& params) {
@@ -57,17 +75,17 @@ void JerryIsolate::InitializeJerryIsolate(const v8::Isolate::CreateParams& param
     bool protocol = jerryx_debugger_tcp_create (5001);
     jerryx_debugger_after_connect (protocol && jerryx_debugger_ws_create ());
 #endif
+  s_currentIsolate = this;
 }
 
 
 void JerryIsolate::Enter(void) {
-    JerryIsolate::s_currentIsolate = this;
 }
 
 void JerryIsolate::Exit(void) {
-    if (m_contexts.size() == 0) {
-        JerryIsolate::s_currentIsolate = NULL;
-    }
+  if (m_contexts.size() == 0)
+  {
+  }
 }
 
 static jerry_value_t IsolateTerminateCallback(void *user_p) {
@@ -142,10 +160,11 @@ void JerryIsolate::Dispose(void) {
 
     m_micro_tasks.clear();
 
-    //JerryForceCleanup();
+    // JerryForceCleanup();
 
     jerry_cleanup();
 
+    free (current_context_p);
     // Warning!... Do not use the JerryIsolate after this!
     // If you do: dragons will spawn from the depths of the earth and tear everything apart!
     // You have been warned!
@@ -210,7 +229,7 @@ void JerryIsolate::PushContext(JerryValue* context) {
     // return the current context if needed.
     jerry_value_t old_realm = jerry_set_realm(context->value());
     m_contexts.push_back(std::pair<JerryValue*, jerry_value_t>(context, old_realm));
-    JerryIsolate::s_currentIsolate = this;
+    s_currentIsolate = this;
 }
 
 void JerryIsolate::PopContext() {
@@ -299,7 +318,7 @@ void JerryIsolate::ReportFatalError(const char* location, const char* message) {
 }
 
 JerryIsolate* JerryIsolate::GetCurrent(void) {
-    return JerryIsolate::s_currentIsolate;
+    return s_currentIsolate;
 }
 
 void JerryIsolate::InitalizeSlots(void) {
